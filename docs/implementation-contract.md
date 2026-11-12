@@ -1,6 +1,6 @@
 # Kontrak implementasi
 
-Laravel 11, Blade/Tailwind 3, MySQL. UI Indonesia, hijau tua/ivory/aksen emas. Tidak ada peminjaman, denda, reservasi, laporan, atau reset password.
+Laravel 13, Blade/Tailwind 3, MySQL. UI Indonesia, hijau tua/ivory/aksen emas. Tidak ada peminjaman, denda, reservasi, laporan, atau reset password.
 
 ## Model (parent)
 User: t_user, id_user, nama/email/password/role; anggota() hasOne. Tidak ada remember_token; login tanpa remember.
@@ -17,7 +17,7 @@ UI agent owns resources/views except emails, resources/css/app.css, resources/js
 - login GET /login: AuthController.create view auth.login; login.store POST /login AuthController.store; logout POST /logout AuthController.destroy
 - daftar GET /daftar: RegistrationController.create view auth.daftar; daftar.store POST /daftar RegistrationController.store
 - anggota.kartu GET /anggota/kartu: MemberController.card view anggota.kartu, $anggota with user (can be null), $qrCode (safe SVG string or null)
-- anggota.verifikasi GET /anggota/verifikasi/{token}: MemberController.verify view anggota.verifikasi, $anggota (approved only); public minimal data: nama, nim, prodi, angkatan, status. No email/phone/KTM.
+- anggota.verifikasi GET /anggota/verifikasi/{token}: MemberController.verify view anggota.verifikasi, $anggota (approved only); public card identity: nama, nim, prodi, fakultas, tanggal terbit, status, and institution. Foto hanya ditampilkan jika persetujuan QR tersimpan. Anggota lama tanpa persetujuan tidak menampilkan foto. No angkatan/email/phone/KTM.
 - admin.dashboard GET /admin: view admin.dashboard, $pending, $totalAnggota (approved), $totalBuku (titles), $stokHabis, $pendaftarTerbaru (5 with user)
 - admin.pendaftar.index GET /admin/pendaftar: ApplicantController.index view admin.pendaftar.index, $pendaftar paginator with user. request q and status (default pending)
 - admin.pendaftar.show GET /admin/pendaftar/{anggota}: ApplicantController.show view admin.pendaftar.show, $anggota with user

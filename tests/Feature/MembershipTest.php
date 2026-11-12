@@ -59,8 +59,22 @@ class MembershipTest extends LibraryTestCase
             ->assertSee($member->tanggal_terbit->format('d/m/Y'))
             ->assertDontSee($member->user->email)
             ->assertDontSee($member->no_hp)
+            ->assertDontSee('anggota/foto/foto-uji.jpg')
             ->assertDontSee($member->foto_KTM);
         $this->get(route('anggota.verifikasi', 'not-a-real-token'))->assertNotFound();
+    }
+
+    public function test_public_verification_shows_photo_only_when_consent_is_recorded(): void
+    {
+        $member = $this->member([
+            'status_verifikasi' => 'disetujui',
+            'QRcode' => str_repeat('p', 64),
+            'persetujuan_qr' => true,
+        ]);
+
+        $this->get(route('anggota.verifikasi', $member->QRcode))
+            ->assertOk()
+            ->assertSee('anggota/foto/foto-uji.jpg');
     }
 
     public function test_student_cannot_approve_any_member_including_self(): void
@@ -183,7 +197,7 @@ class MembershipTest extends LibraryTestCase
         $member = $this->member(['status_verifikasi' => 'disetujui', 'QRcode' => str_repeat('q', 64)]);
         $this->actingAs($member->user);
 
-        foreach (['192.168.1.5', '10.10.9.228'] as $address) {
+        foreach (['192.0.2.15', '198.51.100.20'] as $address) {
             $this->get("http://{$address}:8000/anggota/kartu")
                 ->assertOk()
                 ->assertViewHas('verificationUrl', 'https://perpus.example.test/anggota/verifikasi/'.str_repeat('q', 64));

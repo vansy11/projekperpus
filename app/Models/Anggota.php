@@ -9,12 +9,12 @@ class Anggota extends Model
 {
     protected $table = 't_anggota';
     protected $primaryKey = 'id_anggota';
-    protected $fillable = ['id_user', 'nim', 'prodi', 'fakultas', 'angkatan', 'no_hp', 'foto_stnghBadan', 'foto_KTM', 'QRcode', 'status_verifikasi', 'alasan_penolakan', 'tanggal_terbit'];
+    protected $fillable = ['id_user', 'nim', 'prodi', 'fakultas', 'angkatan', 'no_hp', 'foto_stnghBadan', 'foto_KTM', 'QRcode', 'status_verifikasi', 'alasan_penolakan', 'tanggal_terbit', 'persetujuan_qr'];
     protected $hidden = ['foto_KTM', 'QRcode'];
 
     protected function casts(): array
     {
-        return ['angkatan' => 'integer', 'tanggal_terbit' => 'datetime'];
+        return ['angkatan' => 'integer', 'tanggal_terbit' => 'datetime', 'persetujuan_qr' => 'boolean'];
     }
 
     public function user(): BelongsTo

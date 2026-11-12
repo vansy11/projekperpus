@@ -51,6 +51,7 @@ class RegistrationController extends Controller
                     'nim' => $data['nim'], 'prodi' => $data['prodi'],
                     'fakultas' => config('program_studi')[$data['prodi']], 'angkatan' => null,
                     'no_hp' => $data['no_hp'], 'foto_stnghBadan' => $portrait, 'foto_KTM' => $ktm,
+                    'persetujuan_qr' => true,
                     'status_verifikasi' => 'pending', 'QRcode' => null, 'alasan_penolakan' => null,
                 ]);
             });

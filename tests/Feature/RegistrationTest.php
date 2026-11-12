@@ -49,6 +49,7 @@ class RegistrationTest extends LibraryTestCase
         $this->assertNotSame('Password123!', $user->password);
         $this->assertSame('pending', $member->status_verifikasi);
         $this->assertSame('Fakultas Teknik dan Informatika', $member->fakultas);
+        $this->assertTrue($member->persetujuan_qr);
         $this->assertNull($member->angkatan);
         $this->assertNull($member->QRcode);
         $this->assertStringNotContainsString('portrait.jpg', $member->foto_stnghBadan);
@@ -88,7 +89,7 @@ class RegistrationTest extends LibraryTestCase
     public function test_registration_rejects_incomplete_and_invalid_fields(): void
     {
         $this->post(route('daftar.store'), [])->assertSessionHasErrors([
-            'nama', 'nim', 'email', 'password', 'prodi', 'captcha', 'no_hp', 'foto_stnghBadan', 'foto_KTM',
+            'nama', 'nim', 'email', 'password', 'prodi', 'persetujuan_qr', 'captcha', 'no_hp', 'foto_stnghBadan', 'foto_KTM',
         ]);
         $this->assertDatabaseCount('t_user', 0);
     }

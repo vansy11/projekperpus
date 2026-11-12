@@ -55,7 +55,7 @@ class MemberController extends Controller
         abort_unless(preg_match('/\A[A-Za-z0-9]{64}\z/', $token) === 1, 404);
 
         $anggota = Anggota::query()
-            ->select(['id_anggota', 'id_user', 'nim', 'prodi', 'fakultas', 'tanggal_terbit', 'status_verifikasi'])
+            ->select(['id_anggota', 'id_user', 'nim', 'prodi', 'fakultas', 'tanggal_terbit', 'status_verifikasi', 'foto_stnghBadan', 'persetujuan_qr'])
             ->with('user:id_user,nama')
             ->where('QRcode', $token)
             ->where('status_verifikasi', 'disetujui')

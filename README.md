@@ -1,6 +1,6 @@
 # Sistem Perpustakaan Universitas Gajayana Malang
 
-Aplikasi Laravel 11 untuk pendaftaran anggota mahasiswa, validasi petugas, kartu anggota ber-QR, pengelolaan kategori/buku, serta katalog publik. Antarmuka menggunakan Blade dan Tailwind CSS dengan bahasa Indonesia. Tidak mencakup peminjaman, pengembalian, denda, reservasi, atau buku digital.
+Aplikasi Laravel 13 untuk pendaftaran anggota mahasiswa, validasi petugas, kartu anggota ber-QR, pengelolaan kategori/buku, serta katalog publik. Antarmuka menggunakan Blade dan Tailwind CSS dengan bahasa Indonesia. Tidak mencakup peminjaman, pengembalian, denda, reservasi, atau buku digital.
 
 ## Menjalankan hasil proyek di komputer ini
 
@@ -21,7 +21,7 @@ Jika pemantau sudah berjalan, helper akan menampilkan alamat saat ini. Untuk men
 
 ### Akses QR dari jaringan LAN
 
-Helper menampilkan IPv4 privat dari jaringan yang sedang aktif, misalnya `http://192.168.1.5:8000`. Saat DHCP memberikan IP lain, pemantau memindahkan server ke alamat baru tanpa mengubah `.env`. QR kartu membuka halaman verifikasi anggota dari database melalui alamat LAN aktif, termasuk ketika kartu dibuka dari localhost. Foto dan cover buku menggunakan alamat relatif sehingga ikut berpindah bersama alamat halaman.
+Helper menampilkan IPv4 privat dari jaringan yang sedang aktif, misalnya `http://192.168.1.x:8000`. Saat DHCP memberikan IP lain, pemantau memindahkan server ke alamat LAN aktif tanpa mengubah `.env`. QR kartu membuka halaman verifikasi anggota dari database melalui alamat LAN aktif, termasuk ketika kartu dibuka dari localhost. Foto dan cover buku menggunakan alamat relatif sehingga ikut berpindah bersama alamat halaman.
 
 Setelah komputer dimulai ulang, jalankan MySQL Laragon lalu `.\scripts\start-local.ps1` lagi. Ponsel harus berada di jaringan yang dapat mengakses komputer; firewall atau isolasi perangkat Wi-Fi dapat menghalangi koneksi. **QR pada kartu cetak/PDF menyimpan alamat pada saat dicetak.** Jika IP DHCP berubah, kartu lama perlu dicetak ulang. Agar kartu fisik tetap berlaku lintas jaringan tanpa cetak ulang, dibutuhkan nama domain/hostname yang selalu dapat diakses beserta DNS atau layanan pengalihan yang stabil; IP LAN saja tidak dapat menjamin hal itu.
 
@@ -35,7 +35,26 @@ Web root Apache/Nginx wajib menunjuk folder **public**, bukan root proyek. Janga
 
 ## Instalasi di komputer lain
 
-Prasyarat: PHP 8.2+ (yang diuji: 8.3), Composer 2, Node.js/npm, MySQL 8. Ekstensi PHP: PDO MySQL, PDO SQLite untuk test, mbstring, openssl, tokenizer, XML/DOM, ctype, fileinfo, GD, serta ZIP untuk Composer. Gunakan terminal Laragon agar `php` dan `composer` tersedia di PATH.
+### Berbagi aplikasi lewat tautan
+
+Repo GitHub membagikan source code, bukan menjalankan aplikasi. Agar orang lain langsung memakai aplikasi lewat tautan tanpa memasang Laravel, proyek perlu di-deploy ke hosting yang mendukung PHP/Laravel dan database MySQL, lalu diberi domain HTTPS. GitHub Pages tidak menjalankan aplikasi Laravel. Pengguna akan membuka alamat situs melalui browser tanpa instalasi; data dan berkas harus disiapkan di hosting secara terpisah. Atur konfigurasi produksi di environment hosting; jangan unggah `.env`, backup database, foto anggota, atau dokumen KTM ke repo. QR pada kartu harus dibuat memakai domain tersebut agar dapat dibuka dari ponsel di luar jaringan lokal.
+
+### Deploy ke AutoDev AsiaHub
+
+Repo ini menyertakan `Dockerfile` dan `docker-compose.yml` untuk impor project yang sudah ada ke AutoDev. Atur project menjadi privat; aplikasi tetap dapat dibuka melalui domain publiknya. Jangan hubungkan database atau file storage ke data lokal Laragon.
+
+Pada pemeriksaan 12 November 2026, dashboard akun Free mengunci fitur **Environment Variables** untuk paket berbayar. Aplikasi ini memerlukan secret untuk `APP_KEY`, password admin, dan password database. Karena itu, paket Free belum cukup untuk menjalankan project ini dengan konfigurasi produksi yang aman. Jangan mulai project dengan nilai kosong/default atau menyimpan secret di repo publik. Project AutoDev yang dibuat untuk percobaan tidak memiliki data anggota dan sudah dihentikan.
+
+Jika menggunakan hosting yang mendukung secret variables, Compose menjalankan web Laravel pada port 80 dan MySQL 8.4 sebagai service terpisah. Volume `mysql_data` menyimpan database; volume `app_storage` menyimpan foto anggota, KTM privat, sesi, dan file storage. Jangan hapus kedua volume tersebut. Isi environment variables di pengaturan secret milik hosting, bukan di source code:
+
+- `APP_KEY`: kunci Laravel baru untuk deployment ini.
+- `ADMIN_INITIAL_PASSWORD`: password awal admin minimal 12 karakter. Login awal menggunakan `admin@gajayana.ac.id`.
+- `DB_PASSWORD` dan `DB_ROOT_PASSWORD`: dua password database kuat dan berbeda.
+- `APP_URL` dan `MEMBERSHIP_VERIFICATION_BASE_URL`: domain HTTPS project yang ditetapkan hosting, tanpa garis miring di akhir.
+
+Container menjalankan migrasi dan membuat admin awal ketika mulai. Seeder deployment tidak membawa katalog contoh. Setelah deploy, ubah password awal admin dan pastikan storage serta database mempunyai backup sebelum menerima pendaftaran. Foto, NIM, KTM, dan nomor HP yang dikumpulkan dari pendaftar akan disimpan pada layanan hosting tersebut; halaman QR hanya menampilkan identitas yang dijelaskan pada persetujuan pendaftaran.
+
+Prasyarat: PHP 8.3+, Composer 2, Node.js/npm, MySQL 8. Ekstensi PHP: PDO MySQL, PDO SQLite untuk test, mbstring, openssl, tokenizer, XML/DOM, ctype, fileinfo, GD, serta ZIP untuk Composer. Gunakan terminal Laragon agar `php` dan `composer` tersedia di PATH.
 
 ```sh
 composer install
@@ -105,8 +124,9 @@ Jika sebelumnya telah memakai kredensial admin contoh dari versi lokal, ganti pa
 - Password baru minimal delapan karakter serta harus memuat huruf besar, huruf kecil, angka, dan simbol. Form menampilkan pilihan lihat password, konfirmasi sebelum kirim, serta soal penjumlahan yang divalidasi di server dan berlaku sekali selama 10 menit. CAPTCHA ini sederhana; pembatasan pendaftaran juga tetap berlaku.
 - Admin dapat menambah atau mengganti cover JPG, PNG, atau WebP maksimal 2 MB pada form buku. Buku lama akan menunjukkan bahwa cover belum tersedia sampai petugas mengunggahnya.
 - Tanggal terbit kartu dicatat saat admin menyetujui pendaftaran; KTA dan halaman verifikasi menampilkan tanggal lengkap. Untuk persetujuan sebelum kolom ini ditambahkan, migrasi mengisi tanggal dari `updated_at` hanya jika anggota disetujui dan waktu perubahan lebih baru daripada pendaftaran. Data tanpa jejak waktu yang memadai tetap ditampilkan sebagai belum tercatat.
-- Kartu menyediakan tempat pengesahan Kepala Perpustakaan. Gunakan gambar resmi di `public/pengesahan/tanda-tangan.png` dan `public/pengesahan/stempel.png`, serta atur `MEMBERSHIP_AUTHORITY_NAME` di `.env` jika nama pejabat sudah tersedia. Jangan memakai gambar tanda tangan atau stempel yang belum disahkan. Setelah mengubah `.env`, jalankan `php artisan config:clear`.
-- QR memakai alamat LAN aktif dari helper atau alamat halaman kartu dan token verifikasi anggota. Pemindaian membuka route publik yang mengambil status anggota yang disetujui dari database. Perubahan IP setelah kartu dicetak tetap memerlukan cetak ulang kartu atau alamat domain yang stabil.
+- Kartu depan dan belakang memakai rasio ID‑1 85,6 × 53,98 mm. Cetak menempatkan masing-masing sisi pada halaman A4 terpisah agar dapat dicetak bolak-balik; pilih skala 100% dan balik sisi panjang. Kartu digital menampilkan foto, nama, NIM, program studi, fakultas, dan tanggal terbit.
+- Lambang kampus memakai PNG dari [situs UPT Perpustakaan Pascasarjana UNIGA](https://library.pasca.unigamalang.ac.id/images/default/logo.png), pada subdomain resmi `unigamalang.ac.id`.
+- QR memakai alamat LAN aktif dari helper atau alamat halaman kartu dan token verifikasi anggota. Pemindaian membuka halaman publik berisi kartu digital dan status anggota terbaru dari database. Halaman ini tidak menampilkan email, nomor HP, KTM, atau password. Pendaftar harus menyetujui bahwa nama, foto, NIM, prodi, fakultas, tanggal terbit, dan status dapat dilihat melalui QR. Persetujuan disimpan pada data anggota; foto anggota lama tanpa persetujuan tersebut tetap tersembunyi. Perubahan IP setelah kartu dicetak tetap memerlukan cetak ulang kartu atau alamat domain yang stabil.
 - Admin dapat mengirim ulang hasil verifikasi dari detail pendaftar yang sudah disetujui atau ditolak; alasan penolakan yang tersimpan ikut digunakan. Konfigurasi saat ini `MAIL_MAILER=log`, sehingga email belum dikirim ke inbox. Isi konfigurasi SMTP pada `.env` dan uji pengiriman melalui penyedia email sebelum menggunakan tombol tersebut. Aplikasi menampilkan peringatan saat masih memakai mode pengujian.
 
 ## Alur penggunaan dan pemeriksaan tiap tahap
@@ -126,7 +146,7 @@ Untuk Mailtrap gunakan `MAIL_MAILER=smtp` dan host, port, username/password SMTP
 
 Foto setengah badan disimpan di `storage/app/public/anggota/foto`, dengan nama acak. **KTM disimpan di `storage/app/private/ktm`**, bukan disk publik, untuk memenuhi kewajiban admin-only tanpa bergantung pada aturan web server. `storage:link` hanya membuka disk publik. Endpoint `/admin/pendaftar/{anggota}/ktm` memerlukan role admin dan memberikan header `private, no-store`.
 
-`QRcode` menyimpan token acak 64 karakter, bukan ID berurutan. QR SVG dibuat oleh `simplesoftwareio/simple-qrcode` saat menampilkan kartu. Halaman publik verifikasi hanya menampilkan nama, NIM, prodi, angkatan, dan status; tidak memuat email, nomor HP, KTM, atau password. Pengamanan form menggunakan CSRF, session regeneration, password hashing Laravel, validasi Form Request, middleware role, serta constraint database.
+`QRcode` menyimpan token acak 64 karakter, bukan ID berurutan. QR SVG dibuat oleh `simplesoftwareio/simple-qrcode` saat menampilkan kartu. Halaman publik verifikasi menampilkan foto, nama, NIM, prodi, fakultas, tanggal terbit, status, dan instansi penerbit; tidak memuat angkatan, email, nomor HP, KTM, atau password. Cap “VALIDASI QR DIGITAL” menandai pemeriksaan status secara daring; kolom tanda tangan tetap kosong untuk pejabat berwenang. Pengesahan resmi harus diberikan petugas kampus. Pengamanan form menggunakan CSRF, session regeneration, password hashing Laravel, validasi Form Request, middleware role, serta constraint database.
 
 ## Pengujian
 
@@ -142,6 +162,6 @@ PHPUnit memakai **SQLite in-memory** dengan `RefreshDatabase`, storage palsu, da
 
 ## Versi dependensi
 
-Versi framework dipertahankan **Laravel 11.57.1** sesuai permintaan. Saat instalasi, Composer melaporkan 5 advisory keamanan pada framework; resolver memerlukan `--no-security-blocking` untuk versi 11 yang diminta. Pengaturan audit global tidak dinonaktifkan dan lockfile disertakan. **Proyek ini ditujukan untuk pembelajaran lokal; sebelum deployment publik, migrasikan ke versi Laravel yang masih menerima perbaikan keamanan dan selesaikan temuan `composer audit`.** Jika mengubah dependency, lakukan evaluasi advisory, jangan melewati pemeriksaan keamanan tanpa meninjaunya.
+Framework diperbarui ke **Laravel 13.42.0** dengan PHP 8.3+; lockfile diperbarui bersama dependensinya. Sebelum menjalankan layanan publik, siapkan konfigurasi produksi, database baru, penyimpanan foto yang persisten, dan akun admin awal pada hosting. Jangan gunakan database atau berkas anggota lokal.
 
-Dokumentasi versi yang dipakai: [Laravel 11 authentication](https://laravel.com/docs/11.x/authentication), [filesystem](https://laravel.com/docs/11.x/filesystem), dan [middleware](https://laravel.com/docs/11.x/middleware).
+Dokumentasi versi yang dipakai: [Laravel 13 authentication](https://laravel.com/docs/13.x/authentication), [filesystem](https://laravel.com/docs/13.x/filesystem), dan [middleware](https://laravel.com/docs/13.x/middleware).
